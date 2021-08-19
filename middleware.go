@@ -15,8 +15,6 @@ type chilogger struct {
 	name string
 }
 
-
-
 // NewZapMiddleware returns a new Zap Middleware handler.
 func NewZapMiddleware(name string, logger *zap.Logger) func(next http.Handler) http.Handler {
 	return chilogger{
@@ -31,6 +29,8 @@ func (c chilogger) middleware(next http.Handler) http.Handler {
 		var requestID string
 		if reqID := r.Context().Value(middleware.RequestIDKey); reqID != nil {
 			requestID = reqID.(string)
+		} else {
+			requestID = r.Header.Get("X-Request-Id")
 		}
 		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 		next.ServeHTTP(ww, r)
@@ -47,6 +47,7 @@ func (c chilogger) middleware(next http.Handler) http.Handler {
 			}
 			if requestID != "" {
 				fields = append(fields, zap.String("http.request.id", requestID))
+				fields = append(fields, zap.String("trace.id", requestID))
 			}
 			c.logZ.Info("request completed", fields...)
 		}
