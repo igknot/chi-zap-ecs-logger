@@ -47,7 +47,6 @@ func (c chilogger) middleware(next http.Handler) http.Handler {
 			}
 			if requestID != "" {
 				fields = append(fields, zap.String("http.request.id", requestID))
-				fields = append(fields, zap.String("trace.id", requestID))
 			}
 			c.logZ.Info("request completed", fields...)
 		}
